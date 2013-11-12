@@ -2,29 +2,27 @@
 
 from common import dropbox_client
 from dropbox import rest
+from settings import processSettings
 
 import sys
 import os
 import datetime
+import re
+
 
 # dropbox API doesn't return any sensible datestrings.
 DATE_FORMAT = "%a, %d %b %Y %H:%M:%S +0000"
 
-MAX_DAYS=15
+# Get configuration based on sysargs and set variables
+config = processSettings(sys.argv)
+recover_to = config['recover_to']
 
-USE_RESTORE = True
-
-if len(sys.argv) not in (2, 3):
-    print "Usage: recover.py <output folder> [<start walk>]"
-    sys.exit(1)
-recover_to = sys.argv[1]
 try:
-    start_walk = sys.argv[2]
+    start_walk = config['start_walk']
 except IndexError:
     start_walk = "/"
 
 client = dropbox_client()
-
 
 def recover_tree(folder = "/", recover_to=recover_to):
     # called recursively. We're going to walk the entire Dropbox
@@ -54,9 +52,15 @@ def recover_tree(folder = "/", recover_to=recover_to):
         if os.path.exists(target):
             # already recovered
             pass
-        elif date < datetime.datetime.now() - datetime.timedelta(days=MAX_DAYS):
+        elif config['max_days'] and date < datetime.datetime.now() - datetime.timedelta(days=config['max_days']):
             # not deleted recently
             pass
+        elif config['search_date'] and (date > config['search_date'] or date < config['search_date']):
+            # not deleted on the given day
+            pass
+        elif config['search_date_range'] and (date > config['search_date_range'][1] or date < config['search_date_range'][0]):
+            # not deleted in within the provided date range
+            pass      
         else:
             print "  %s is deleted"%(filedata["path"])
 
@@ -70,7 +74,7 @@ def recover_tree(folder = "/", recover_to=recover_to):
             except OSError:
                 pass
 
-            if USE_RESTORE:
+            if config['use_restore']:
 
                 restore = client.restore(filedata["path"], alive["rev"])
                 print restore

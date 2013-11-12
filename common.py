@@ -6,8 +6,8 @@ from oauth.oauth import OAuthToken
 import os
 
 # Get your own app key and secret from the Dropbox developer website
-APP_KEY = 'f2uu8y1z8a2pr8a'
-APP_SECRET = 'qmyxhrekjtxsjtd'
+APP_KEY = 'XXXXXXXXXX'
+APP_SECRET = 'XXXXXXXX'
 
 # ACCESS_TYPE should be 'dropbox' or 'app_folder' as configured for your app
 ACCESS_TYPE = 'dropbox'
